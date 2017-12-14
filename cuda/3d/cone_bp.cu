@@ -127,13 +127,16 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 			float fDen  = fCd.w + fX * fCd.x + fY * fCd.y + fZ * fCd.z;
 
 			float fU,fV, fr;
-
+			
+			
+			#pragma unroll
 			for (int idx = 0; idx < ZSIZE; idx++)
 			{
 				fr = __fdividef(1.0f, fDen);
 				fU = fUNum * fr;
 				fV = fVNum * fr;
 				float fVal = tex3D(gT_coneProjTexture, fU, fAngle, fV);
+				
 				if (FDKWEIGHT)
 					Z[idx] += fr*fr*fVal;
 				else
