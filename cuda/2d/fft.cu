@@ -216,13 +216,12 @@ bool runCudaFFT(int _iProjectionCount, const float * _pfDevRealSource,
 	SAFE_CALL(cudaMalloc((void **)&pfDevRealFFTSource, bufferMemSize));
 	SAFE_CALL(cudaMemset(pfDevRealFFTSource, 0, bufferMemSize));
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = _pfDevRealSource + iProjectionIndex * _iSourcePitch;
-		float * pfTargetLocation = pfDevRealFFTSource + iProjectionIndex * _iFFTRealDetectorCount;
+	SAFE_CALL(cudaMemcpy2D(
+		pfDevRealFFTSource, sizeof(float) * _iFFTRealDetectorCount,
+		_pfDevRealSource,   sizeof(float) * _iSourcePitch,
+		sizeof(float) * _iProjDets, _iProjectionCount,
+		cudaMemcpyDeviceToDevice));
 
-		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
-	}
 
 	bool bResult = invokeCudaFFT(_iProjectionCount, _iFFTRealDetectorCount,
 	                             pfDevRealFFTSource, _pDevTargetComplex);
@@ -258,13 +257,11 @@ bool runCudaIFFT(int _iProjectionCount, const cufftComplex* _pDevSourceComplex,
 
 	SAFE_CALL(cudaMemset(_pfRealTarget, 0, sizeof(float) * _iProjectionCount * _iTargetPitch));
 
-	for(int iProjectionIndex = 0; iProjectionIndex < _iProjectionCount; iProjectionIndex++)
-	{
-		const float * pfSourceLocation = pfDevRealFFTTarget + iProjectionIndex * _iFFTRealDetectorCount;
-		float* pfTargetLocation = _pfRealTarget + iProjectionIndex * _iTargetPitch;
-
-		SAFE_CALL(cudaMemcpy(pfTargetLocation, pfSourceLocation, sizeof(float) * _iProjDets, cudaMemcpyDeviceToDevice));
-	}
+	SAFE_CALL(cudaMemcpy2D(
+		_pfRealTarget, sizeof(float) * _iTargetPitch,
+		pfDevRealFFTTarget, sizeof(float) * _iFFTRealDetectorCount,
+		sizeof(float) * _iProjDets, _iProjectionCount,
+		cudaMemcpyDeviceToDevice));
 
 	SAFE_CALL(cudaFree(pfDevRealFFTTarget));
 
