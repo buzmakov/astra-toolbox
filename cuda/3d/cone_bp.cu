@@ -49,7 +49,7 @@ namespace astraCUDA3d {
 #define ZSIZE 6
 static const unsigned int g_volBlockZ = ZSIZE;
 
-static const unsigned int g_anglesPerBlock = 32;
+static const unsigned int g_anglesPerBlock = 4;
 static const unsigned int g_volBlockX = 16;
 static const unsigned int g_volBlockY = 32;
 
@@ -153,6 +153,7 @@ __global__ void dev_cone_BP(void* D_volData, unsigned int volPitch, int startAng
 	if (endZ > dims.iVolZ - startZ)
 		endZ = dims.iVolZ - startZ;
 
+	#pragma unroll
 	for(int i=0; i < endZ; i++)
 		volData[((startZ+i)*dims.iVolY+Y)*volPitch+X] += Z[i] * fOutputScale;
 } //End kernel
